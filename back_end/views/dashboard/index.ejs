@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>系統管理介面</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+  <div class="wrapper">
+    <!-- 側邊欄 -->
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <h3>智慧車輛管理平台</h3>
+      </div>
+
+      <ul class="list-unstyled components">
+        <li class="active">
+          <a href="/dashboard">
+            <i class="fas fa-tachometer-alt"></i> 儀表板
+          </a>
+        </li>
+        <li>
+          <a href="/vehicles">
+            <i class="fas fa-car"></i> 車輛管理
+          </a>
+        </li>
+        <li>
+          <a href="/rentals">
+            <i class="fas fa-exchange-alt"></i> 借還車記錄
+          </a>
+        </li>
+        <li>
+          <a href="/maintenance">
+            <i class="fas fa-wrench"></i> 維修保養
+          </a>
+        </li>
+        <li>
+          <a href="/users">
+            <i class="fas fa-users"></i> 用戶管理
+          </a>
+        </li>
+        <li>
+          <a href="/reports">
+            <i class="fas fa-chart-bar"></i> 報表分析
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- 頁面內容 -->
+    <div id="content">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+          <button type="button" id="sidebarCollapse" class="btn btn-info">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="ml-auto">
+            <a href="/user/logout" class="btn btn-danger">
+              <i class="fas fa-sign-out-alt"></i> 登出
+            </a>
+          </div>
+        </div>
+      </nav>
+
+      <div class="container-fluid mt-3">
+        <h2 class="mb-4">系統總覽</h2>
+        
+        <!-- 統計卡片 -->
+        <div class="row">
+          <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 class="card-title">總車輛數</h5>
+                    <h2 class="card-text"><%= vehicleCount || 0 %></h2>
+                  </div>
+                  <i class="fas fa-car fa-3x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 class="card-title">可用車輛</h5>
+                    <h2 class="card-text"><%= availableVehicles || 0 %></h2>
+                  </div>
+                  <i class="fas fa-check-circle fa-3x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 class="card-title">借出中</h5>
+                    <h2 class="card-text"><%= rentedVehicles || 0 %></h2>
+                  </div>
+                  <i class="fas fa-clock fa-3x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 class="card-title">維修中</h5>
+                    <h2 class="card-text"><%= brokenVehicles || 0 %></h2>
+                  </div>
+                  <i class="fas fa-wrench fa-3x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 最近借車記錄 -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h5 class="mb-0">最近借車記錄</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>車牌號碼</th>
+                  <th>借用人</th>
+                  <th>借用時間</th>
+                  <th>歸還時間</th>
+                  <th>里程數</th>
+                  <th>狀態</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (locals.recentLogs && recentLogs.length > 0) { %>
+                  <% recentLogs.forEach(log => { %>
+                    <tr>
+                      <td><%= log.vehicle_id %></td>
+                      <td><%= log.user_id %></td>
+                      <td><%= new Date(log.rent_time).toLocaleString() %></td>
+                      <td><%= log.return_time ? new Date(log.return_time).toLocaleString() : '尚未歸還' %></td>
+                      <td><%= log.mileage_after_driving - log.mileage_before_driving %> km</td>
+                      <td>
+                        <% if (!log.return_time) { %>
+                          <span class="badge badge-warning">借用中</span>
+                        <% } else { %>
+                          <span class="badge badge-success">已歸還</span>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" class="text-center">無記錄</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- 需要維護車輛 -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h5 class="mb-0">需要維護車輛</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>車牌號碼</th>
+                  <th>最後保養日期</th>
+                  <th>當前里程數</th>
+                  <th>保養提醒</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (locals.vehicleCount && vehicleCount > 0) { %>
+                  <tr>
+                    <td>ABC-1234</td>
+                    <td>2025-04-01</td>
+                    <td>5,000 km</td>
+                    <td><span class="badge badge-warning">即將需要保養</span></td>
+                    <td><button class="btn btn-sm btn-primary">安排保養</button></td>
+                  </tr>
+                <% } else { %>
+                  <tr>
+                    <td colspan="5" class="text-center">無需要維護的車輛</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('#sidebarCollapse').on('click', function () {
+        $('#sidebar').toggleClass('active');
+      });
+    });
+  </script>
+</body>
+</html>

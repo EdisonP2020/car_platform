@@ -1,0 +1,40 @@
+{
+  "users": [
+    {
+      "userID": 1,
+      "name": "admin",
+      "password": "admin123",
+      "phone_num": "0912345678",
+      "isAdmin": true
+    },
+    {
+      "userID": 2,
+      "name": "user",
+      "password": "user123",
+      "phone_num": "0987654321",
+      "isAdmin": false
+    }
+  ],
+  "vehicles": [
+    {
+      "license_plate": "ABC-1234",
+      "mileage": 5000,
+      "low_oil_volume": false,
+      "warning_light": false,
+      "status": "available",
+      "last_maintenance_date": "2025-04-01",
+      "last_maintainance_mileage": 4500
+    },
+    {
+      "license_plate": "AD-7575",
+      "mileage": 1561651,
+      "low_oil_volume": false,
+      "warning_light": false,
+      "status": "rented",
+      "last_maintenance_date": "2025-01-17",
+      "last_maintainance_mileage": 1561651
+    }
+  ],
+  "rental_logs": [],
+  "breakdown_logs": []
+}

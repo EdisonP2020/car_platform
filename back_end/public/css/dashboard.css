@@ -1,0 +1,76 @@
+body {
+  font-family: '微軟正黑體', Arial, sans-serif;
+  background: #f8f9fa;
+}
+
+.wrapper {
+  display: flex;
+  width: 100%;
+}
+
+#sidebar {
+  min-width: 250px;
+  max-width: 250px;
+  background: #343a40;
+  color: #fff;
+  transition: all 0.3s;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+#sidebar.active {
+  margin-left: -250px;
+}
+
+#sidebar .sidebar-header {
+  padding: 20px;
+  background: #212529;
+}
+
+#sidebar ul.components {
+  padding: 20px 0;
+}
+
+#sidebar ul p {
+  color: #fff;
+  padding: 10px;
+}
+
+#sidebar ul li a {
+  padding: 10px 20px;
+  font-size: 1.1em;
+  display: block;
+  color: #fff;
+  text-decoration: none;
+}
+
+#sidebar ul li a:hover {
+  color: #343a40;
+  background: #fff;
+}
+
+#sidebar ul li.active > a, 
+#sidebar a[aria-expanded="true"] {
+  color: #fff;
+  background: #495057;
+}
+
+#content {
+  width: 100%;
+  min-height: 100vh;
+  transition: all 0.3s;
+}
+
+.card-body i {
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  #sidebar {
+    margin-left: -250px;
+  }
+  #sidebar.active {
+    margin-left: 0;
+  }
+}

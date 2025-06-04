@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>租借記錄管理</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+  <div class="wrapper">
+    <!-- 側邊欄 -->
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <h3>智慧車輛管理平台</h3>
+      </div>
+
+      <ul class="list-unstyled components">
+        <li>
+          <a href="/dashboard">
+            <i class="fas fa-tachometer-alt"></i> 儀表板
+          </a>
+        </li>
+        <li>
+          <a href="/vehicles">
+            <i class="fas fa-car"></i> 車輛管理
+          </a>
+        </li>
+        <li class="active">
+          <a href="/rentals">
+            <i class="fas fa-exchange-alt"></i> 借還車記錄
+          </a>
+        </li>
+        <li>
+          <a href="/maintenance">
+            <i class="fas fa-wrench"></i> 維修保養
+          </a>
+        </li>
+        <li>
+          <a href="/users">
+            <i class="fas fa-users"></i> 用戶管理
+          </a>
+        </li>
+        <li>
+          <a href="/reports">
+            <i class="fas fa-chart-bar"></i> 報表分析
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- 頁面內容 -->
+    <div id="content">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+          <button type="button" id="sidebarCollapse" class="btn btn-info">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="ml-auto">
+            <a href="/user/logout" class="btn btn-danger">
+              <i class="fas fa-sign-out-alt"></i> 登出
+            </a>
+          </div>
+        </div>
+      </nav>
+
+      <div class="container-fluid mt-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2>借還車記錄管理</h2>
+          <a href="/rentals/borrow" class="btn btn-primary">
+            <i class="fas fa-plus"></i> 新增借車
+          </a>
+        </div>
+        
+        <!-- 借還車記錄表格 -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">借還車記錄</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>記錄編號</th>
+                  <th>車牌號碼</th>
+                  <th>借用人</th>
+                  <th>借用時間</th>
+                  <th>歸還時間</th>
+                  <th>行駛里程</th>
+                  <th>狀態</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (locals.rentalLogs && rentalLogs.length > 0) { %>
+                  <% rentalLogs.forEach(log => { %>
+                    <tr>
+                      <td><%= log.log_ID %></td>
+                      <td><%= log.vehiclePlate %></td>
+                      <td><%= log.userName %></td>
+                      <td><%= log.rentTime %></td>
+                      <td><%= log.returnTime %></td>
+                      <td><%= typeof log.mileageDiff === 'number' ? log.mileageDiff + ' km' : log.mileageDiff %></td>
+                      <td>
+                        <% if (log.status === '已歸還') { %>
+                          <span class="badge badge-success">已歸還</span>
+                        <% } else { %>
+                          <span class="badge badge-warning">借用中</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <div class="btn-group">
+                          <a href="/rentals/detail/<%= log.log_ID %>" class="btn btn-sm btn-info">詳情</a>
+                          <% if (log.status !== '已歸還') { %>
+                            <a href="/rentals/return/<%= log.log_ID %>" class="btn btn-sm btn-success">歸還</a>
+                          <% } %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="8" class="text-center">暫無租借記錄</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('#sidebarCollapse').on('click', function () {
+        $('#sidebar').toggleClass('active');
+      });
+    });
+  </script>
+</body>
+</html>

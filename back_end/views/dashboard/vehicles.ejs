@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>車輛管理</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+  <div class="wrapper">
+    <!-- 側邊欄 (與儀表板相同) -->
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <h3>智慧車輛管理平台</h3>
+      </div>
+
+      <ul class="list-unstyled components">
+        <li>
+          <a href="/dashboard">
+            <i class="fas fa-tachometer-alt"></i> 儀表板
+          </a>
+        </li>
+        <li class="active">
+          <a href="/vehicles">
+            <i class="fas fa-car"></i> 車輛管理
+          </a>
+        </li>
+        <li>
+          <a href="/rentals">
+            <i class="fas fa-exchange-alt"></i> 借還車記錄
+          </a>
+        </li>
+        <li>
+          <a href="/maintenance">
+            <i class="fas fa-wrench"></i> 維修保養
+          </a>
+        </li>
+        <li>
+          <a href="/users">
+            <i class="fas fa-users"></i> 用戶管理
+          </a>
+        </li>
+        <li>
+          <a href="/reports">
+            <i class="fas fa-chart-bar"></i> 報表分析
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- 頁面內容 -->
+    <div id="content">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+          <button type="button" id="sidebarCollapse" class="btn btn-info">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="ml-auto">
+            <a href="/user/logout" class="btn btn-danger">
+              <i class="fas fa-sign-out-alt"></i> 登出
+            </a>
+          </div>
+        </div>
+      </nav>
+
+      <div class="container-fluid mt-3">
+        <div class="d-flex justify-content-between mb-4">
+          <h2>車輛管理</h2>
+          <button class="btn btn-primary" data-toggle="modal" data-target="#addVehicleModal">
+            <i class="fas fa-plus"></i> 新增車輛
+          </button>
+        </div>
+        
+        <!-- 車輛列表 -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">車輛列表</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>車牌號碼</th>
+                  <th>里程數</th>
+                  <th>油量狀態</th>
+                  <th>警示燈</th>
+                  <th>車輛狀態</th>
+                  <th>最後保養日期</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (locals.vehicles && vehicles.length > 0) { %>
+                  <% vehicles.forEach(vehicle => { %>
+                    <tr>
+                      <td><%= vehicle.license_plate %></td>
+                      <td><%= vehicle.mileage %> km</td>
+                      <td>
+                        <% if (vehicle.low_oil_volume) { %>
+                          <span class="badge badge-danger">油量低</span>
+                        <% } else { %>
+                          <span class="badge badge-success">正常</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (vehicle.warning_light) { %>
+                          <span class="badge badge-danger">亮起</span>
+                        <% } else { %>
+                          <span class="badge badge-success">正常</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (vehicle.status === 'available') { %>
+                          <span class="badge badge-success">可用</span>
+                        <% } else if (vehicle.status === 'rented') { %>
+                          <span class="badge badge-warning">借出</span>
+                        <% } else { %>
+                          <span class="badge badge-danger">故障</span>
+                        <% } %>
+                      </td>
+                      <td><%= vehicle.last_maintenance_date || '未記錄' %></td>
+                      <td>
+                        <div class="btn-group">
+                          <button class="btn btn-sm btn-info">詳情</button>
+                          <button class="btn btn-sm btn-warning">編輯</button>
+                          <button class="btn btn-sm btn-danger">刪除</button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="7" class="text-center">暫無車輛記錄</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增車輛模態框 -->
+  <div class="modal fade" id="addVehicleModal" tabindex="-1" role="dialog" aria-labelledby="addVehicleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addVehicleModalLabel">新增車輛</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="addVehicleForm" action="/vehicles/add" method="POST">
+            <div class="form-group">
+              <label for="licensePlate">車牌號碼</label>
+              <input type="text" class="form-control" id="licensePlate" name="license_plate" required>
+            </div>
+            <div class="form-group">
+              <label for="mileage">當前里程數</label>
+              <input type="number" class="form-control" id="mileage" name="mileage" required>
+            </div>
+            <div class="form-group">
+              <label for="lastMaintenanceDate">最後保養日期</label>
+              <input type="date" class="form-control" id="lastMaintenanceDate" name="last_maintenance_date">
+            </div>
+            <div class="form-group">
+              <label for="status">車輛狀態</label>
+              <select class="form-control" id="status" name="status">
+                <option value="available">可用</option>
+                <option value="rented">借出</option>
+                <option value="broken">故障</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+          <button type="submit" form="addVehicleForm" class="btn btn-primary">新增</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('#sidebarCollapse').on('click', function () {
+        $('#sidebar').toggleClass('active');
+      });
+    });
+  </script>
+</body>
+</html>
