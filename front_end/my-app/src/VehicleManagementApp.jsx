@@ -107,7 +107,7 @@ const VehicleManagementApp = () => {
   };
   
   // 處理借車提交
-  const handleRentSubmit = () => {
+  const handleRentSubmit = async () => {
     // 初始化錯誤物件
     const newErrors = {};
     
@@ -139,27 +139,39 @@ const VehicleManagementApp = () => {
       return;
     }
     
-    // 這裡會有API呼叫來將數據提交到後端
-    console.log("借車資訊提交:", {
-      vehicle_id: currentVehicle?.license_plate,
-      user_id: USER_DATA.userID,
-      mileage_before_driving: parseInt(mileage),
-      oil_before: oilLevel,
-      rent_time: new Date(),
-      has_issues: hasIssues,
-      issue_description: issueDescription,
-      issue_type: issueType
-    });
-    
-    // 借車成功，顯示成功動畫
-    setAnimationType('rent');
-    setCurrentPage('successAnimation');
-    setCountdown(5);
-    resetForm();
+    try {
+      const res = await fetch('/rentals/borrow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          vehicle_id: currentVehicle?.license_plate,
+          user_id: USER_DATA.userID,
+          mileage_before_driving: parseInt(mileage),
+          oil_before: oilLevel
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('借車失敗');
+      }
+
+      await res.json();
+
+      setAnimationType('rent');
+      setCurrentPage('successAnimation');
+      setCountdown(5);
+      resetForm();
+    } catch (error) {
+      setErrors({ api: error.message });
+      setShowErrorMessage(true);
+      setTimeout(() => setShowErrorMessage(false), 3000);
+    }
   };
   
   // 處理還車提交
-  const handleReturnSubmit = () => {
+  const handleReturnSubmit = async () => {
     // 初始化錯誤物件
     const newErrors = {};
     
@@ -191,31 +203,56 @@ const VehicleManagementApp = () => {
       return;
     }
     
-    // 這裡會有API呼叫來將數據提交到後端
-    console.log("還車資訊提交:", {
-      vehicle_id: currentVehicle?.license_plate,
-      user_id: USER_DATA.userID,
-      mileage_after_driving: parseInt(mileage),
-      oil_after: oilLevel,
-      return_time: new Date(),
-      has_issues: hasIssues,
-      issue_description: issueDescription,
-      issue_type: issueType
-    });
-    
-    // 還車成功，顯示成功動畫
-    setAnimationType('return');
-    setCurrentPage('successAnimation');
-    setCountdown(5);
-    resetForm();
+    try {
+      const res = await fetch('/rentals/return', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          vehicle_id: currentVehicle?.license_plate,
+          mileage_after_driving: parseInt(mileage),
+          oil_after: oilLevel
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('還車失敗');
+      }
+
+      await res.json();
+
+      setAnimationType('return');
+      setCurrentPage('successAnimation');
+      setCountdown(5);
+      resetForm();
+    } catch (error) {
+      setErrors({ api: error.message });
+      setShowErrorMessage(true);
+      setTimeout(() => setShowErrorMessage(false), 3000);
+    }
   };
   
   // 模擬登入功能
-  const handleLogin = () => {
-    // 在演示版本中，直接允許登入而不檢查憑證
-    console.log("登入嘗試 - 用戶名:", username, "密碼:", password);
-    // 不再跳轉到掃描頁面，而是直接模擬相機開啟狀態
-    setCurrentPage('cameraOpen');
+  const handleLogin = async () => {
+    try {
+      const res = await fetch('/user/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!res.ok) {
+        throw new Error('登入失敗');
+      }
+
+      await res.json();
+      setCurrentPage('cameraOpen');
+    } catch (error) {
+      setErrors({ api: error.message });
+      setShowErrorMessage(true);
+      setTimeout(() => setShowErrorMessage(false), 3000);
+    }
   };
 
   // 錯誤訊息組件

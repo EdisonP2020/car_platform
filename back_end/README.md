@@ -1,5 +1,14 @@
 # car_platform
 
+## Default Accounts
+
+For testing purposes, the SQLite database is automatically seeded with the following accounts when first created:
+
+- **Admin**: `admin` / `admin123`
+- **User**: `user` / `user123`
+
+These accounts are inserted only if the `users` table is empty.
+
 
 
 ## Getting started

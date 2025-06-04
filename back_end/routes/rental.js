@@ -104,13 +104,17 @@ router.post('/borrow', async (req, res) => {
     }
     
     // 保存租借記錄
-    await db.addRentalLog(rentalLog);
+    const savedLog = await db.addRentalLog(rentalLog);
     
     // 更新車輛狀態為借出
     await db.updateVehicle(vehicle_id, { status: 'rented' });
-    
-    // 重定向到租借記錄頁面
-    res.redirect('/rentals');
+
+    if (req.is('application/json') || req.accepts(['json'])) {
+      res.json({ success: true, log: savedLog });
+    } else {
+      // 重定向到租借記錄頁面
+      res.redirect('/rentals');
+    }
   } catch (err) {
     console.error('處理借車請求錯誤:', err);
     res.status(500).send('伺服器錯誤');
@@ -178,7 +182,7 @@ router.post('/return/:id', async (req, res) => {
     }
 
     // 更新數據庫
-    await db.updateRentalLog(logId, updates);
+    const updatedLog = await db.updateRentalLog(logId, updates);
     
     // 更新車輛狀態為可用，並更新里程數
     await db.updateVehicle(log.vehicle_id, { 
@@ -187,11 +191,47 @@ router.post('/return/:id', async (req, res) => {
       low_oil_volume: oil_after === 'low'
     });
     
-    // 重定向到租借記錄頁面
-    res.redirect('/rentals');
+    if (req.is('application/json') || req.accepts(['json'])) {
+      res.json({ success: true, log: updatedLog });
+    } else {
+      // 重定向到租借記錄頁面
+      res.redirect('/rentals');
+    }
   } catch (err) {
     console.error('處理歸還請求錯誤:', err);
     res.status(500).send('伺服器錯誤');
+  }
+});
+
+// 透過 vehicle_id 歸還車輛的 API
+router.post('/return', async (req, res) => {
+  try {
+    const { vehicle_id, mileage_after_driving, oil_after } = req.body;
+
+    const log = await db.getActiveRentalLogByVehicle(vehicle_id);
+
+    if (!log) {
+      return res.status(404).json({ error: '找不到未歸還的租借記錄' });
+    }
+
+    const updates = {
+      mileage_after_driving: parseInt(mileage_after_driving),
+      oil_after,
+      return_time: new Date().toISOString(),
+    };
+
+    const updatedLog = await db.updateRentalLog(log.log_ID, updates);
+
+    await db.updateVehicle(vehicle_id, {
+      status: 'available',
+      mileage: parseInt(mileage_after_driving),
+      low_oil_volume: oil_after === 'low',
+    });
+
+    res.json({ success: true, log: updatedLog });
+  } catch (err) {
+    console.error('處理歸還請求錯誤:', err);
+    res.status(500).json({ error: '伺服器錯誤' });
   }
 });
 
