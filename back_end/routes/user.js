@@ -17,18 +17,28 @@ router.post('/login', async (req, res) => {
     
     if (!user) {
       console.log('登入失敗:用戶不存在或密碼錯誤');
-      return res.render('user/login', { 
+      if (req.is('application/json') || req.accepts(['json'])) {
+        return res.status(401).json({ error: '使用者名稱或密碼不正確' });
+      }
+      return res.render('user/login', {
         title: '使用者登入',
         error: '使用者名稱或密碼不正確'
       });
     }
-    
+
     console.log('登入成功:', user);
+    if (req.is('application/json') || req.accepts(['json'])) {
+      return res.json({ success: true, user });
+    }
     // 成功登入，重定向到儀表板
     res.redirect('/dashboard');
   } catch (err) {
     console.error('登入處理錯誤:', err);
-    res.status(500).send('伺服器錯誤');
+    if (req.is('application/json') || req.accepts(['json'])) {
+      res.status(500).json({ error: '伺服器錯誤' });
+    } else {
+      res.status(500).send('伺服器錯誤');
+    }
   }
 });
 

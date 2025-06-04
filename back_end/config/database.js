@@ -62,8 +62,30 @@ function initializeDatabase() {
     FOREIGN KEY(vehicle_id) REFERENCES vehicles(license_plate),
     FOREIGN KEY(user_id) REFERENCES users(userID)
   )`);
-  
+
   console.log('資料庫表格已初始化');
+
+  // 如果沒有任何用戶，建立預設的 admin 和 user 方便測試
+  db.get('SELECT COUNT(*) AS count FROM users', (err, row) => {
+    if (err) {
+      console.error('檢查預設用戶時發生錯誤:', err.message);
+      return;
+    }
+    if (row.count === 0) {
+      db.run(
+        `INSERT INTO users (name, password, phone_num, isAdmin)
+         VALUES ('admin', 'admin123', '0912345678', 1),
+                ('user', 'user123', '0987654321', 0)`,
+        (err2) => {
+          if (err2) {
+            console.error('建立預設用戶失敗:', err2.message);
+          } else {
+            console.log('已建立預設的 admin 與 user 帳號');
+          }
+        }
+      );
+    }
+  });
 }
 
 function run(query, params = []) {
@@ -196,6 +218,14 @@ async function getRentalLogById(id) {
   return get(`SELECT * FROM rental_logs WHERE log_ID = ?`, [id]);
 }
 
+// 取得尚未歸還的租借紀錄
+async function getActiveRentalLogByVehicle(vehicleId) {
+  return get(
+    `SELECT * FROM rental_logs WHERE vehicle_id = ? AND return_time IS NULL ORDER BY rent_time DESC LIMIT 1`,
+    [vehicleId]
+  );
+}
+
 async function updateRentalLog(logId, updates) {
   const fields = [];
   const values = [];
@@ -247,6 +277,7 @@ module.exports = {
   getAllRentalLogs,
   getRentalLogById,
   updateRentalLog,
+  getActiveRentalLogByVehicle,
   addBreakdownLog,
   getAllBreakdownLogs,
 };
