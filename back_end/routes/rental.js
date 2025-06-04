@@ -79,6 +79,7 @@ router.get('/borrow', async (req, res) => {
 router.post('/borrow', async (req, res) => {
   try {
     const { vehicle_id, user_id, mileage_before_driving, oil_before } = req.body;
+    const wantsJson = req.is('application/json') || (req.headers.accept && req.headers.accept.includes('application/json'));
     
     // 創建租借記錄
     const rentalLog = {
@@ -109,7 +110,7 @@ router.post('/borrow', async (req, res) => {
     // 更新車輛狀態為借出
     await db.updateVehicle(vehicle_id, { status: 'rented' });
 
-    if (req.is('application/json') || req.accepts(['json'])) {
+    if (wantsJson) {
       res.json({ success: true, log: savedLog });
     } else {
       // 重定向到租借記錄頁面
@@ -158,6 +159,7 @@ router.post('/return/:id', async (req, res) => {
     const logId = parseInt(req.params.id);
     const { mileage_after_driving, oil_after } = req.body;
     
+    const wantsJson = req.is('application/json') || (req.headers.accept && req.headers.accept.includes('application/json'));
     const log = await db.getRentalLogById(logId);
 
     if (!log) {
@@ -191,7 +193,7 @@ router.post('/return/:id', async (req, res) => {
       low_oil_volume: oil_after === 'low'
     });
     
-    if (req.is('application/json') || req.accepts(['json'])) {
+    if (wantsJson) {
       res.json({ success: true, log: updatedLog });
     } else {
       // 重定向到租借記錄頁面
