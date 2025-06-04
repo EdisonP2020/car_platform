@@ -121,8 +121,7 @@ router.post('/borrow', async (req, res) => {
 router.get('/return/:id', async (req, res) => {
   try {
     const logId = parseInt(req.params.id);
-    const allLogs = await db.getAllRentalLogs();
-    const log = allLogs.find(l => l.log_ID === logId);
+    const log = await db.getRentalLogById(logId);
     
     if (!log) {
       return res.status(404).send('找不到租借記錄');
@@ -155,19 +154,14 @@ router.post('/return/:id', async (req, res) => {
     const logId = parseInt(req.params.id);
     const { mileage_after_driving, oil_after } = req.body;
     
-    // 獲取所有記錄
-    const allLogs = await db.getAllRentalLogs();
-    const logIndex = allLogs.findIndex(l => l.log_ID === logId);
-    
-    if (logIndex === -1) {
+    const log = await db.getRentalLogById(logId);
+
+    if (!log) {
       return res.status(404).send('找不到租借記錄');
     }
     
-    const log = allLogs[logIndex];
-    
     // 更新租借記錄
-    const updatedLog = {
-      ...log,
+    const updates = {
       mileage_after_driving: parseInt(mileage_after_driving),
       oil_after,
       return_time: new Date().toISOString()
@@ -180,12 +174,11 @@ router.post('/return/:id', async (req, res) => {
       
       // 保存文件
       await photoFile.mv(path.join(UPLOAD_DIR, fileName));
-      updatedLog.mileage_after_photo_path = `/uploads/${fileName}`;
+      updates.mileage_after_photo_path = `/uploads/${fileName}`;
     }
-    
+
     // 更新數據庫
-    allLogs[logIndex] = updatedLog;
-    await db.writeDb({ ...await db.readDb(), rental_logs: allLogs });
+    await db.updateRentalLog(logId, updates);
     
     // 更新車輛狀態為可用，並更新里程數
     await db.updateVehicle(log.vehicle_id, { 
@@ -206,8 +199,7 @@ router.post('/return/:id', async (req, res) => {
 router.get('/detail/:id', async (req, res) => {
   try {
     const logId = parseInt(req.params.id);
-    const allLogs = await db.getAllRentalLogs();
-    const log = allLogs.find(l => l.log_ID === logId);
+    const log = await db.getRentalLogById(logId);
     
     if (!log) {
       return res.status(404).send('找不到租借記錄');

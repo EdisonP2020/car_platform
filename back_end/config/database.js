@@ -66,4 +66,187 @@ function initializeDatabase() {
   console.log('資料庫表格已初始化');
 }
 
-module.exports = db;
+function run(query, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(query, params, function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this);
+      }
+    });
+  });
+}
+
+function all(query, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(query, params, (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+}
+
+function get(query, params = []) {
+  return new Promise((resolve, reject) => {
+    db.get(query, params, (err, row) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(row);
+      }
+    });
+  });
+}
+
+// 用戶相關操作
+async function getUser(username, password) {
+  return get(
+    `SELECT * FROM users WHERE name = ? AND password = ?`,
+    [username, password]
+  );
+}
+
+async function getAllUsers() {
+  return all(`SELECT * FROM users`);
+}
+
+// 車輛相關操作
+async function getAllVehicles() {
+  return all(`SELECT * FROM vehicles`);
+}
+
+async function addVehicle(vehicle) {
+  const {
+    license_plate,
+    mileage = 0,
+    low_oil_volume = 0,
+    warning_light = 0,
+    status = 'available',
+    last_maintenance_date = null,
+    last_maintainance_mileage = 0,
+  } = vehicle;
+
+  await run(
+    `INSERT INTO vehicles (
+      license_plate, mileage, low_oil_volume, warning_light,
+      status, last_maintenance_date, last_maintainance_mileage
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      license_plate,
+      mileage,
+      low_oil_volume ? 1 : 0,
+      warning_light ? 1 : 0,
+      status,
+      last_maintenance_date,
+      last_maintainance_mileage,
+    ]
+  );
+  return vehicle;
+}
+
+async function updateVehicle(licensePlate, updates) {
+  const fields = [];
+  const values = [];
+  for (const [key, value] of Object.entries(updates)) {
+    fields.push(`${key} = ?`);
+    values.push(value);
+  }
+  if (fields.length === 0) return null;
+  values.push(licensePlate);
+  await run(
+    `UPDATE vehicles SET ${fields.join(', ')} WHERE license_plate = ?`,
+    values
+  );
+  return get(`SELECT * FROM vehicles WHERE license_plate = ?`, [licensePlate]);
+}
+
+async function deleteVehicle(licensePlate) {
+  await run(`DELETE FROM vehicles WHERE license_plate = ?`, [licensePlate]);
+  return true;
+}
+
+// 租借記錄操作
+async function addRentalLog(log) {
+  const columns = [];
+  const placeholders = [];
+  const values = [];
+  for (const [key, value] of Object.entries(log)) {
+    columns.push(key);
+    placeholders.push('?');
+    values.push(value);
+  }
+  const result = await run(
+    `INSERT INTO rental_logs (${columns.join(',')}) VALUES (${placeholders.join(
+      ','
+    )})`,
+    values
+  );
+  return { ...log, log_ID: result.lastID };
+}
+
+async function getAllRentalLogs() {
+  return all(`SELECT * FROM rental_logs`);
+}
+
+async function getRentalLogById(id) {
+  return get(`SELECT * FROM rental_logs WHERE log_ID = ?`, [id]);
+}
+
+async function updateRentalLog(logId, updates) {
+  const fields = [];
+  const values = [];
+  for (const [key, value] of Object.entries(updates)) {
+    fields.push(`${key} = ?`);
+    values.push(value);
+  }
+  if (fields.length === 0) return null;
+  values.push(logId);
+  await run(
+    `UPDATE rental_logs SET ${fields.join(', ')} WHERE log_ID = ?`,
+    values
+  );
+  return get(`SELECT * FROM rental_logs WHERE log_ID = ?`, [logId]);
+}
+
+// 故障記錄操作
+async function addBreakdownLog(log) {
+  const columns = [];
+  const placeholders = [];
+  const values = [];
+  for (const [key, value] of Object.entries(log)) {
+    columns.push(key);
+    placeholders.push('?');
+    values.push(value);
+  }
+  const result = await run(
+    `INSERT INTO breakdown_logs (${columns.join(',')}) VALUES (${placeholders.join(
+      ','
+    )})`,
+    values
+  );
+  return { ...log, log_id: result.lastID };
+}
+
+async function getAllBreakdownLogs() {
+  return all(`SELECT * FROM breakdown_logs`);
+}
+
+module.exports = {
+  db,
+  getUser,
+  getAllUsers,
+  getAllVehicles,
+  addVehicle,
+  updateVehicle,
+  deleteVehicle,
+  addRentalLog,
+  getAllRentalLogs,
+  getRentalLogById,
+  updateRentalLog,
+  addBreakdownLog,
+  getAllBreakdownLogs,
+};
